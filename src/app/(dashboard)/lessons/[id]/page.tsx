@@ -171,7 +171,7 @@ export default function LessonDetailPage() {
       {/* Header */}
       <div>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-xl font-bold text-slate-800 sm:text-2xl">
             {recording.title?.trim() || "Untitled lesson"}
           </h1>
           <StatusBadge status={recording.status} />

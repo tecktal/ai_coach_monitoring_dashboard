@@ -46,7 +46,7 @@ export default function OverviewPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Overview</h1>
         <p className="text-sm text-slate-500">
           App adoption and usage at a glance.
         </p>
@@ -59,7 +59,7 @@ export default function OverviewPage() {
       {overview.loading ? (
         <Spinner />
       ) : overview.data ? (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 items-start gap-4 lg:grid-cols-4">
           <StatCard
             label="Teachers"
             value={overview.data.total_teachers}

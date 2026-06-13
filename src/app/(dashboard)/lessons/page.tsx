@@ -82,7 +82,7 @@ export default function LessonsPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Lessons</h1>
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Lessons</h1>
           <p className="text-sm text-slate-500">
             Consolidated log of every recorded lesson.
           </p>

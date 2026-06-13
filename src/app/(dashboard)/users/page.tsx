@@ -67,7 +67,7 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-slate-800">Users</h1>
+        <h1 className="text-xl font-bold text-slate-800 sm:text-2xl">Users</h1>
         <p className="text-sm text-slate-500">
           Grant dashboard access by changing a user&apos;s role. Members create an
           account once in the app, then you promote them here.

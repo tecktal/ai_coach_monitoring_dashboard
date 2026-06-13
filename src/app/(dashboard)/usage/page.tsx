@@ -50,7 +50,7 @@ export default function UsagePage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Usage by school</h1>
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Usage by school</h1>
           <p className="text-sm text-slate-500">
             How many teachers per school are using the app, and how often.
           </p>

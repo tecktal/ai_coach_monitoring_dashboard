@@ -42,7 +42,7 @@ export default function TeachersPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">Teachers</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Teachers</h1>
         <p className="text-sm text-slate-500">
           Registered teachers and their activity.
         </p>

@@ -56,8 +56,8 @@ export function StatCard({
           </span>
         ) : null}
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-1 text-3xl font-bold text-slate-800">{value}</p>
+          <p className="text-xs font-medium text-slate-500 sm:text-sm">{label}</p>
+          <p className="mt-1 text-2xl font-bold text-slate-800 sm:text-3xl">{value}</p>
           {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
         </div>
       </div>
