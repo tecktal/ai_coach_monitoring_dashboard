@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+build
+npm-debug.log*
+.git
+.gitignore
+Dockerfile
+.dockerignore
+README.md
+design
+# Never bake local env files into the image — NEXT_PUBLIC_* is passed as a build arg
+.env
+.env.*
