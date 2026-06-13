@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
+import { usePageTitle } from "@/components/usePageTitle";
 import { Card, ErrorBox, RoleBadge, Spinner } from "@/components/ui";
 import type { Role } from "@/lib/types";
 
@@ -15,6 +16,8 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 ];
 
 export default function UsersPage() {
+  usePageTitle("Users");
+  const searchId = useId();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -29,15 +32,18 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   const loadUsers = useCallback(() => api.users(search || undefined), [search]);
   const users = useAuthedQuery(loadUsers, [search]);
 
-  async function changeRole(id: string, role: Role) {
+  async function changeRole(id: string, name: string, role: Role) {
     setActionError(null);
+    setActionSuccess(null);
     setBusyId(id);
     try {
       await api.updateUserRole(id, role);
+      setActionSuccess(`Updated ${name} to ${role}.`);
       users.reload();
     } catch (err) {
       setActionError(
@@ -92,7 +98,11 @@ export default function UsersPage() {
         }}
         className="flex gap-2"
       >
+        <label htmlFor={searchId} className="sr-only">
+          Search users by name, username or email
+        </label>
         <input
+          id={searchId}
           type="text"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
@@ -108,6 +118,14 @@ export default function UsersPage() {
       </form>
 
       {actionError ? <ErrorBox message={actionError} /> : null}
+      {actionSuccess ? (
+        <div
+          role="status"
+          className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm text-teal-700"
+        >
+          {actionSuccess}
+        </div>
+      ) : null}
 
       <Card className="p-0">
         {users.loading ? (
@@ -116,31 +134,33 @@ export default function UsersPage() {
           </div>
         ) : users.error ? (
           <div className="p-5">
-            <ErrorBox message={users.error} />
+            <ErrorBox message={users.error} onRetry={users.reload} />
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Name</th>
-                  <th className="px-4 py-3 font-semibold">Username</th>
-                  <th className="px-4 py-3 font-semibold">Email</th>
-                  <th className="px-4 py-3 font-semibold">School</th>
-                  <th className="px-4 py-3 font-semibold">Country</th>
-                  <th className="px-4 py-3 font-semibold">Current role</th>
-                  <th className="px-4 py-3 font-semibold">Change role</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Name</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Username</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Email</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">School</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Country</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Current role</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Change role</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {(users.data ?? []).map((u) => {
                   const isSelf = u.id === user?.id;
+                  const name =
+                    `${u.first_name} ${u.last_name}`.trim() || u.username;
                   return (
                     <tr key={u.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 font-medium text-slate-800">
-                        {`${u.first_name} ${u.last_name}`.trim() || u.username}
+                        {name}
                         {isSelf ? (
-                          <span className="ml-1 text-xs text-slate-400">(you)</span>
+                          <span className="ml-1 text-xs text-slate-500">(you)</span>
                         ) : null}
                       </td>
                       <td className="px-4 py-3 text-slate-600">{u.username}</td>
@@ -154,7 +174,10 @@ export default function UsersPage() {
                         <select
                           value={u.role}
                           disabled={isSelf || busyId === u.id}
-                          onChange={(e) => changeRole(u.id, e.target.value as Role)}
+                          onChange={(e) =>
+                            changeRole(u.id, name, e.target.value as Role)
+                          }
+                          aria-label={`Change role for ${name}`}
                           title={
                             isSelf
                               ? "You cannot change your own role"
@@ -174,7 +197,7 @@ export default function UsersPage() {
                 })}
                 {(users.data ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">
+                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
                       No users found.
                     </td>
                   </tr>
@@ -185,7 +208,7 @@ export default function UsersPage() {
         )}
       </Card>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-slate-500">
         Joined dates and activity are available on the Teachers tab.
       </p>
     </div>

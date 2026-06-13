@@ -21,9 +21,11 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
+import { usePageTitle } from "@/components/usePageTitle";
 import { Card, ErrorBox, Spinner, StatCard } from "@/components/ui";
 
 export default function OverviewPage() {
+  usePageTitle("Overview");
   const loadOverview = useCallback(() => api.overview(), []);
   const loadUsage = useCallback(() => api.usage(), []);
 
@@ -50,7 +52,9 @@ export default function OverviewPage() {
         </p>
       </header>
 
-      {overview.error ? <ErrorBox message={overview.error} /> : null}
+      {overview.error ? (
+        <ErrorBox message={overview.error} onRetry={overview.reload} />
+      ) : null}
 
       {overview.loading ? (
         <Spinner />
@@ -110,13 +114,19 @@ export default function OverviewPage() {
         {usage.loading ? (
           <Spinner />
         ) : usage.error ? (
-          <ErrorBox message={usage.error} />
+          <ErrorBox message={usage.error} onRetry={usage.reload} />
         ) : chartData.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">
+          <p className="py-8 text-center text-sm text-slate-500">
             No recordings yet.
           </p>
         ) : (
-          <div className="h-80 w-full">
+          <div
+            className="h-80 w-full"
+            role="img"
+            aria-label={`Bar chart: top ${chartData.length} schools by number of recordings. ${chartData
+              .map((d) => `${d.school}: ${d.recordings}`)
+              .join("; ")}.`}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}

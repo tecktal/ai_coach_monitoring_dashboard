@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { ErrorBox } from "@/components/ui";
+import { usePageTitle } from "@/components/usePageTitle";
 
 export default function LoginPage() {
+  usePageTitle("Sign in");
   const { user, ready, login } = useAuth();
   const router = useRouter();
 
+  const usernameId = useId();
+  const passwordId = useId();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,10 +56,14 @@ export default function LoginPage() {
           {error ? <ErrorBox message={error} /> : null}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor={usernameId}
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
               Username
             </label>
             <input
+              id={usernameId}
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -63,29 +74,49 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor={passwordId}
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            />
+            <div className="relative">
+              <input
+                id={passwordId}
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+                className="w-full rounded-xl border border-slate-300 px-3 py-2 pr-10 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={submitting}
+            aria-busy={submitting}
             className="w-full rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 disabled:opacity-60"
           >
             {submitting ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-xs text-slate-400">
+        <p className="mt-4 text-center text-xs text-slate-500">
           Authorized administrators only.
         </p>
       </div>

@@ -24,3 +24,23 @@ body {
   background-clip: text;
   color: transparent;
 }
+
+/* Visible keyboard focus for all interactive elements (links, buttons, rows,
+   <summary>, etc.). Inputs keep their own teal ring. */
+:focus-visible {
+  outline: 2px solid #0d9488;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Respect users who prefer reduced motion (vestibular disorders). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

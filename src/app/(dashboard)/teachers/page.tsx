@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
+import { usePageTitle } from "@/components/usePageTitle";
 import { Card, ErrorBox, Spinner } from "@/components/ui";
 
 function formatDate(s?: string): string {
@@ -15,6 +16,9 @@ function formatDate(s?: string): string {
 }
 
 export default function TeachersPage() {
+  usePageTitle("Teachers");
+  const countryId = useId();
+  const schoolId = useId();
   const [country, setCountry] = useState("");
   const [school, setSchool] = useState("");
 
@@ -47,10 +51,14 @@ export default function TeachersPage() {
       <Card>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">
+            <label
+              htmlFor={countryId}
+              className="mb-1 block text-xs font-medium text-slate-500"
+            >
               Country
             </label>
             <select
+              id={countryId}
               value={country}
               onChange={(e) => {
                 setCountry(e.target.value);
@@ -67,10 +75,14 @@ export default function TeachersPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">
+            <label
+              htmlFor={schoolId}
+              className="mb-1 block text-xs font-medium text-slate-500"
+            >
               School
             </label>
             <select
+              id={schoolId}
               value={school}
               onChange={(e) => setSchool(e.target.value)}
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
@@ -93,20 +105,20 @@ export default function TeachersPage() {
           </div>
         ) : teachers.error ? (
           <div className="p-5">
-            <ErrorBox message={teachers.error} />
+            <ErrorBox message={teachers.error} onRetry={teachers.reload} />
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Teacher</th>
-                  <th className="px-4 py-3 font-semibold">Username</th>
-                  <th className="px-4 py-3 font-semibold">School</th>
-                  <th className="px-4 py-3 font-semibold">Country</th>
-                  <th className="px-4 py-3 font-semibold">Recordings</th>
-                  <th className="px-4 py-3 font-semibold">Last active</th>
-                  <th className="px-4 py-3 font-semibold">Joined</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Teacher</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Username</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">School</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Country</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Recordings</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Last active</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Joined</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -127,7 +139,7 @@ export default function TeachersPage() {
                 ))}
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-400">
+                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
                       No teachers match these filters.
                     </td>
                   </tr>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
+import { usePageTitle } from "@/components/usePageTitle";
 import {
   Card,
   ErrorBox,
@@ -36,6 +37,7 @@ function formatDuration(seconds?: number): string {
 }
 
 export default function LessonsPage() {
+  usePageTitle("Lessons");
   const router = useRouter();
   const [filters, setFilters] = useState<LessonFilters>(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
@@ -78,7 +80,7 @@ export default function LessonsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Lessons</h1>
           <p className="text-sm text-slate-500">
@@ -87,7 +89,7 @@ export default function LessonsPage() {
         </div>
         <a
           href={api.exportUrl(filters)}
-          className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
         >
           Export to Excel
         </a>
@@ -155,7 +157,7 @@ export default function LessonsPage() {
           </div>
         ) : lessons.error ? (
           <div className="p-5">
-            <ErrorBox message={lessons.error} />
+            <ErrorBox message={lessons.error} onRetry={lessons.reload} />
           </div>
         ) : (
           <>
@@ -175,16 +177,27 @@ export default function LessonsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {(lessons.data?.rows ?? []).map((row) => (
+                  {(lessons.data?.rows ?? []).map((row) => {
+                    const open = () =>
+                      router.push(`/lessons/${row.recording_id}`);
+                    const who = row.teacher_name || row.teacher_username;
+                    return (
                     <tr
                       key={row.recording_id}
-                      onClick={() => router.push(`/lessons/${row.recording_id}`)}
-                      className="cursor-pointer hover:bg-slate-50"
+                      onClick={open}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          open();
+                        }
+                      }}
+                      role="link"
+                      tabIndex={0}
+                      aria-label={`View lesson by ${who}${row.subject ? `, ${row.subject}` : ""}, ${formatDate(row.created_at)}`}
+                      className="cursor-pointer hover:bg-slate-50 focus-visible:bg-teal-50"
                     >
                       <Td>{formatDate(row.created_at)}</Td>
-                      <Td className="font-medium text-slate-900">
-                        {row.teacher_name || row.teacher_username}
-                      </Td>
+                      <Td className="font-medium text-slate-900">{who}</Td>
                       <Td>{row.school_name ?? "—"}</Td>
                       <Td>{row.country ?? "—"}</Td>
                       <Td>
@@ -199,12 +212,13 @@ export default function LessonsPage() {
                         <ScoreBadge score={row.overall_score} />
                       </Td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {(lessons.data?.rows ?? []).length === 0 ? (
                     <tr>
                       <td
                         colSpan={9}
-                        className="px-4 py-10 text-center text-sm text-slate-400"
+                        className="px-4 py-10 text-center text-sm text-slate-500"
                       >
                         No lessons match these filters.
                       </td>
@@ -260,12 +274,17 @@ function FilterSelect({
   options: string[];
   onChange: (v: string) => void;
 }) {
+  const id = useId();
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-slate-500">
+      <label
+        htmlFor={id}
+        className="mb-1 block text-xs font-medium text-slate-500"
+      >
         {label}
       </label>
       <select
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
@@ -290,12 +309,17 @@ function DateInput({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const id = useId();
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-slate-500">
+      <label
+        htmlFor={id}
+        className="mb-1 block text-xs font-medium text-slate-500"
+      >
         {label}
       </label>
       <input
+        id={id}
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -306,7 +330,11 @@ function DateInput({
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th className="px-4 py-3 font-semibold">{children}</th>;
+  return (
+    <th scope="col" className="px-4 py-3 font-semibold">
+      {children}
+    </th>
+  );
 }
 
 function Td({

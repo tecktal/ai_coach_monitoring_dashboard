@@ -58,7 +58,7 @@ export function StatCard({
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500">{label}</p>
           <p className="mt-1 text-3xl font-bold text-slate-800">{value}</p>
-          {hint ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
+          {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
         </div>
       </div>
     </Card>
@@ -67,17 +67,41 @@ export function StatCard({
 
 export function Spinner({ label = "Loading…" }: { label?: string }) {
   return (
-    <div className="flex items-center gap-3 py-10 text-slate-500">
-      <span className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600" />
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex items-center gap-3 py-10 text-slate-500"
+    >
+      <span
+        aria-hidden="true"
+        className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-teal-600"
+      />
       <span>{label}</span>
     </div>
   );
 }
 
-export function ErrorBox({ message }: { message: string }) {
+export function ErrorBox({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) {
   return (
-    <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-      {message}
+    <div
+      role="alert"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+    >
+      <span>{message}</span>
+      {onRetry ? (
+        <button
+          onClick={onRetry}
+          className="rounded-lg border border-red-300 bg-white px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+        >
+          Try again
+        </button>
+      ) : null}
     </div>
   );
 }

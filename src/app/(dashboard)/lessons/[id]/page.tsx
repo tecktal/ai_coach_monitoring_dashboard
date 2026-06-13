@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { api } from "@/lib/api";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
+import { usePageTitle } from "@/components/usePageTitle";
 import { Card, ErrorBox, Spinner, StatusBadge } from "@/components/ui";
 import type { Analysis, ElementAnalysis } from "@/lib/types";
 
@@ -90,7 +91,7 @@ function Md({ children }: { children?: string }) {
 function ElementScore({ value }: { value: number | null }) {
   if (value == null) {
     return (
-      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold text-slate-400">
+      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-semibold text-slate-500">
         N/A
       </span>
     );
@@ -128,6 +129,7 @@ function titleize(key: string): string {
 }
 
 export default function LessonDetailPage() {
+  usePageTitle("Lesson");
   const params = useParams();
   const id = String(params.id);
 
@@ -141,7 +143,10 @@ export default function LessonDetailPage() {
     return (
       <div className="space-y-4">
         <BackLink />
-        <ErrorBox message={detail.error ?? "Lesson not found"} />
+        <ErrorBox
+          message={detail.error ?? "Lesson not found"}
+          onRetry={detail.reload}
+        />
       </div>
     );
   }
@@ -176,13 +181,19 @@ export default function LessonDetailPage() {
           {teacher?.school_name ? ` · ${teacher.school_name}` : ""}
           {teacher?.country ? ` · ${teacher.country}` : ""}
         </p>
-        <p className="mt-0.5 text-sm text-slate-400">{metaParts.join(" · ")}</p>
+        <p className="mt-0.5 text-sm text-slate-500">{metaParts.join(" · ")}</p>
       </div>
 
       {/* Audio player */}
       <Card>
         <p className="mb-2 text-sm font-semibold text-slate-700">Lesson audio</p>
-        <audio controls preload="none" src={api.lessonAudioUrl(id)} className="w-full">
+        <audio
+          controls
+          preload="none"
+          src={api.lessonAudioUrl(id)}
+          aria-label="Lesson audio player"
+          className="w-full"
+        >
           Your browser does not support audio playback.
         </audio>
       </Card>

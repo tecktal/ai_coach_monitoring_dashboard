@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { api } from "@/lib/api";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
+import { usePageTitle } from "@/components/usePageTitle";
 import { Card, ErrorBox, Spinner } from "@/components/ui";
 
 function formatDate(s?: string): string {
@@ -24,6 +25,8 @@ function formatDate(s?: string): string {
 }
 
 export default function UsagePage() {
+  usePageTitle("Usage");
+  const countryId = useId();
   const [country, setCountry] = useState("");
 
   const loadFilters = useCallback(() => api.filters(), []);
@@ -45,7 +48,7 @@ export default function UsagePage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Usage by school</h1>
           <p className="text-sm text-slate-500">
@@ -53,10 +56,14 @@ export default function UsagePage() {
           </p>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-500">
+          <label
+            htmlFor={countryId}
+            className="mb-1 block text-xs font-medium text-slate-500"
+          >
             Country
           </label>
           <select
+            id={countryId}
             value={country}
             onChange={(e) => setCountry(e.target.value)}
             className="rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
@@ -78,11 +85,17 @@ export default function UsagePage() {
         {usage.loading ? (
           <Spinner />
         ) : usage.error ? (
-          <ErrorBox message={usage.error} />
+          <ErrorBox message={usage.error} onRetry={usage.reload} />
         ) : chartData.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-400">No data yet.</p>
+          <p className="py-8 text-center text-sm text-slate-500">No data yet.</p>
         ) : (
-          <div className="h-80 w-full">
+          <div
+            className="h-80 w-full"
+            role="img"
+            aria-label={`Bar chart: teachers per school. ${chartData
+              .map((d) => `${d.school}: ${d.teachers}`)
+              .join("; ")}.`}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
@@ -116,11 +129,11 @@ export default function UsagePage() {
             <table className="w-full text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Country</th>
-                  <th className="px-4 py-3 font-semibold">School</th>
-                  <th className="px-4 py-3 font-semibold">Teachers</th>
-                  <th className="px-4 py-3 font-semibold">Recordings</th>
-                  <th className="px-4 py-3 font-semibold">Last recording</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Country</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">School</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Teachers</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Recordings</th>
+                  <th scope="col" className="px-4 py-3 font-semibold">Last recording</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -139,7 +152,7 @@ export default function UsagePage() {
                 ))}
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-400">
+                    <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">
                       No data.
                     </td>
                   </tr>
