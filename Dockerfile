@@ -16,7 +16,10 @@ FROM node:22-alpine AS base
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# Use `npm install` rather than `npm ci`: the lockfile was generated on Windows
+# and npm omits some cross-platform optional deps (e.g. @emnapi/* pulled in by
+# Tailwind v4's oxide-wasm32-wasi), which makes the strict `npm ci` abort on Linux.
+RUN npm install --no-audit --no-fund
 
 # 2) Build the standalone output
 FROM base AS builder
