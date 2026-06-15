@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useId, useMemo, useState } from "react";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
 import { usePageTitle } from "@/components/usePageTitle";
-import { Card, ErrorBox, Spinner } from "@/components/ui";
+import { Card, ErrorBox, Pagination, Spinner } from "@/components/ui";
+
+const PAGE_SIZE = 20;
 
 function formatDate(s?: string): string {
   if (!s) return "Never";
@@ -21,6 +24,7 @@ export default function TeachersPage() {
   const schoolId = useId();
   const [country, setCountry] = useState("");
   const [school, setSchool] = useState("");
+  const [page, setPage] = useState(1);
 
   const loadFilters = useCallback(() => api.filters(), []);
   const filterOpts = useAuthedQuery(loadFilters, []);
@@ -38,6 +42,7 @@ export default function TeachersPage() {
   }, [filterOpts.data, country]);
 
   const rows = teachers.data ?? [];
+  const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -63,6 +68,7 @@ export default function TeachersPage() {
               onChange={(e) => {
                 setCountry(e.target.value);
                 setSchool("");
+                setPage(1);
               }}
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
@@ -84,7 +90,10 @@ export default function TeachersPage() {
             <select
               id={schoolId}
               value={school}
-              onChange={(e) => setSchool(e.target.value)}
+              onChange={(e) => {
+                setSchool(e.target.value);
+                setPage(1);
+              }}
               className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               <option value="">All schools</option>
@@ -108,45 +117,69 @@ export default function TeachersPage() {
             <ErrorBox message={teachers.error} onRetry={teachers.reload} />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th scope="col" className="px-4 py-3 font-semibold">Teacher</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Username</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">School</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Country</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Recordings</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Last active</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Joined</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {rows.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-slate-900">
-                      {`${t.first_name} ${t.last_name}`.trim() || t.username}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{t.username}</td>
-                    <td className="px-4 py-3 text-slate-600">{t.school_name ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{t.country ?? "—"}</td>
-                    <td className="px-4 py-3 text-slate-600">{t.recording_count}</td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {formatDate(t.last_activity)}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{formatDate(t.created_at)}</td>
-                  </tr>
-                ))}
-                {rows.length === 0 ? (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
-                      No teachers match these filters.
-                    </td>
+                    <th scope="col" className="px-4 py-3 font-semibold">Teacher</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Username</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">School</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Country</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Recordings</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Last active</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Joined</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Actions</th>
                   </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {pageRows.map((t) => {
+                    const name =
+                      `${t.first_name} ${t.last_name}`.trim() || t.username;
+                    return (
+                      <tr key={t.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 font-medium text-slate-900">
+                          {name}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">{t.username}</td>
+                        <td className="px-4 py-3 text-slate-600">{t.school_name ?? "—"}</td>
+                        <td className="px-4 py-3 text-slate-600">{t.country ?? "—"}</td>
+                        <td className="px-4 py-3 text-slate-600">{t.recording_count}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {formatDate(t.last_activity)}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">{formatDate(t.created_at)}</td>
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/lessons?teacher=${t.id}&tname=${encodeURIComponent(name)}`}
+                            aria-label={`View lessons by ${name}`}
+                            className="inline-block whitespace-nowrap rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-700"
+                          >
+                            View lessons
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-10 text-center text-sm text-slate-500">
+                        No teachers match these filters.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+            {rows.length > 0 ? (
+              <Pagination
+                page={page}
+                pageSize={PAGE_SIZE}
+                total={rows.length}
+                onPageChange={setPage}
+              />
+            ) : null}
+          </>
         )}
       </Card>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
@@ -41,6 +41,32 @@ export default function LessonsPage() {
   const router = useRouter();
   const [filters, setFilters] = useState<LessonFilters>(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
+  const [teacherName, setTeacherName] = useState<string | null>(null);
+
+  // Seed the teacher filter from ?teacher=<id>&tname=<name> (set when arriving
+  // from the Teachers page). Reading window.location avoids the useSearchParams
+  // Suspense requirement in this fully client-rendered app.
+  useEffect(() => {
+    const applyTeacherParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      const teacher = params.get("teacher");
+      if (!teacher) return;
+      setFilters((prev) => ({ ...prev, teacher }));
+      setTeacherName(params.get("tname"));
+    };
+    applyTeacherParam();
+  }, []);
+
+  function clearTeacher() {
+    setPage(1);
+    setFilters((prev) => {
+      const next = { ...prev };
+      delete next.teacher;
+      return next;
+    });
+    setTeacherName(null);
+    router.replace("/lessons");
+  }
 
   const loadFilters = useCallback(() => api.filters(), []);
   const filterOpts = useAuthedQuery(loadFilters, []);
@@ -94,6 +120,21 @@ export default function LessonsPage() {
           Export to Excel
         </a>
       </header>
+
+      {filters.teacher ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-teal-200 bg-teal-50 px-4 py-2 text-sm text-teal-800">
+          <span>
+            Showing lessons for{" "}
+            <strong>{teacherName || "the selected teacher"}</strong>
+          </span>
+          <button
+            onClick={clearTeacher}
+            className="rounded-lg border border-teal-300 bg-white px-3 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100"
+          >
+            Clear
+          </button>
+        </div>
+      ) : null}
 
       {/* Filters */}
       <Card>

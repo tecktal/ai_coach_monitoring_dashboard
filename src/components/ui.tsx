@@ -161,6 +161,49 @@ export function RoleBadge({ role }: { role: string }) {
   );
 }
 
+// Reusable pagination footer for tables. `total` is the full row count, `page`
+// is 1-based. Pure presentational — the parent owns the page state.
+export function Pagination({
+  page,
+  pageSize,
+  total,
+  onPageChange,
+}: {
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+
+  return (
+    <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3 text-sm text-slate-600">
+      <span>{total > 0 ? `${from}–${to} of ${total}` : "0 results"}</span>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          disabled={page <= 1}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Previous
+        </button>
+        <span className="px-1">
+          Page {page} / {totalPages}
+        </span>
+        <button
+          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+          disabled={page >= totalPages}
+          className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Subject color-coding, echoing the app's colored subject tiles. Falls back to
 // a neutral slate chip for unknown subjects.
 const SUBJECT_TINTS: { match: RegExp; style: string }[] = [
