@@ -6,8 +6,10 @@ import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/components/AuthProvider";
 import { useAuthedQuery } from "@/components/useAuthedQuery";
 import { usePageTitle } from "@/components/usePageTitle";
-import { Card, ErrorBox, RoleBadge, Spinner } from "@/components/ui";
+import { Card, ErrorBox, Pagination, RoleBadge, Spinner } from "@/components/ui";
 import type { Role } from "@/lib/types";
+
+const PAGE_SIZE = 20;
 
 const ROLE_OPTIONS: { value: Role; label: string }[] = [
   { value: "teacher", label: "Teacher (no access)" },
@@ -30,12 +32,16 @@ export default function UsersPage() {
 
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   const loadUsers = useCallback(() => api.users(search || undefined), [search]);
   const users = useAuthedQuery(loadUsers, [search]);
+
+  const rows = users.data ?? [];
+  const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   async function changeRole(id: string, name: string, role: Role) {
     setActionError(null);
@@ -95,6 +101,7 @@ export default function UsersPage() {
         onSubmit={(e) => {
           e.preventDefault();
           setSearch(searchInput.trim());
+          setPage(1);
         }}
         className="flex gap-2"
       >
@@ -137,74 +144,84 @@ export default function UsersPage() {
             <ErrorBox message={users.error} onRetry={users.reload} />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th scope="col" className="px-4 py-3 font-semibold">Name</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Username</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Email</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">School</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Country</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Current role</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Change role</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {(users.data ?? []).map((u) => {
-                  const isSelf = u.id === user?.id;
-                  const name =
-                    `${u.first_name} ${u.last_name}`.trim() || u.username;
-                  return (
-                    <tr key={u.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium text-slate-800">
-                        {name}
-                        {isSelf ? (
-                          <span className="ml-1 text-xs text-slate-500">(you)</span>
-                        ) : null}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">{u.username}</td>
-                      <td className="px-4 py-3 text-slate-600">{u.email ?? "—"}</td>
-                      <td className="px-4 py-3 text-slate-600">{u.school_name ?? "—"}</td>
-                      <td className="px-4 py-3 text-slate-600">{u.country ?? "—"}</td>
-                      <td className="px-4 py-3">
-                        <RoleBadge role={u.role} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={u.role}
-                          disabled={isSelf || busyId === u.id}
-                          onChange={(e) =>
-                            changeRole(u.id, name, e.target.value as Role)
-                          }
-                          aria-label={`Change role for ${name}`}
-                          title={
-                            isSelf
-                              ? "You cannot change your own role"
-                              : undefined
-                          }
-                          className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
-                        >
-                          {ROLE_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>
-                              {o.label}
-                            </option>
-                          ))}
-                        </select>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 font-semibold">Name</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Username</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Email</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">School</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Country</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Current role</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Change role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {pageRows.map((u) => {
+                    const isSelf = u.id === user?.id;
+                    const name =
+                      `${u.first_name} ${u.last_name}`.trim() || u.username;
+                    return (
+                      <tr key={u.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 font-medium text-slate-800">
+                          {name}
+                          {isSelf ? (
+                            <span className="ml-1 text-xs text-slate-500">(you)</span>
+                          ) : null}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">{u.username}</td>
+                        <td className="px-4 py-3 text-slate-600">{u.email ?? "—"}</td>
+                        <td className="px-4 py-3 text-slate-600">{u.school_name ?? "—"}</td>
+                        <td className="px-4 py-3 text-slate-600">{u.country ?? "—"}</td>
+                        <td className="px-4 py-3">
+                          <RoleBadge role={u.role} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={u.role}
+                            disabled={isSelf || busyId === u.id}
+                            onChange={(e) =>
+                              changeRole(u.id, name, e.target.value as Role)
+                            }
+                            aria-label={`Change role for ${name}`}
+                            title={
+                              isSelf
+                                ? "You cannot change your own role"
+                                : undefined
+                            }
+                            className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                          >
+                            {ROLE_OPTIONS.map((o) => (
+                              <option key={o.value} value={o.value}>
+                                {o.label}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                        No users found.
                       </td>
                     </tr>
-                  );
-                })}
-                {(users.data ?? []).length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
-                      No users found.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </div>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+            {rows.length > 0 ? (
+              <Pagination
+                page={page}
+                pageSize={PAGE_SIZE}
+                total={rows.length}
+                onPageChange={setPage}
+              />
+            ) : null}
+          </>
         )}
       </Card>
 
