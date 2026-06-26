@@ -207,6 +207,57 @@ export interface LessonDetail {
   analysis?: Analysis | null;
 }
 
+// ---- Manual scoring (pedagogy coach) ----
+
+// A coach's saved manual scoring of a recording. Element score fields mirror
+// `Analysis` for a direct AI-vs-human comparison.
+export interface ManualScore {
+  id: string;
+  recording_id: string;
+  scorer_id: string;
+
+  supportive_environment_score?: number;
+  positive_expectations_score?: number;
+  lesson_facilitation_score?: number;
+  checks_understanding_score?: number;
+  feedback_score?: number;
+  critical_thinking_score?: number;
+  autonomy_score?: number;
+  perseverance_score?: number;
+  social_collaborative_score?: number;
+
+  element_rationales?: Record<string, string>;
+  overall_score?: number;
+  summary?: string;
+  strengths?: string;
+  areas_for_improvement?: string;
+  recommendations?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// The PUT payload. Scores are optional (omit/null = not scored); overall_score
+// is computed server-side and not sent.
+export interface ManualScoreInput {
+  supportive_environment_score?: number | null;
+  positive_expectations_score?: number | null;
+  lesson_facilitation_score?: number | null;
+  checks_understanding_score?: number | null;
+  feedback_score?: number | null;
+  critical_thinking_score?: number | null;
+  autonomy_score?: number | null;
+  perseverance_score?: number | null;
+  social_collaborative_score?: number | null;
+
+  element_rationales?: Record<string, string>;
+  summary?: string;
+  strengths?: string;
+  areas_for_improvement?: string;
+  recommendations?: string;
+  notes?: string;
+}
+
 export interface LessonFilters {
   country?: string;
   school?: string;

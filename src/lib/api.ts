@@ -5,6 +5,8 @@ import type {
   LessonFilters,
   LessonLogResult,
   LoginResponse,
+  ManualScore,
+  ManualScoreInput,
   Role,
   SchoolUsageRow,
   TeacherRosterRow,
@@ -111,6 +113,25 @@ export const api = {
   lessonAudioUrl(id: string): string {
     const token = getToken() || "";
     return `${API_BASE}${API_PREFIX}/admin/lessons/${id}/audio${toQuery({ token })}`;
+  },
+
+  // The signed-in coach's manual score for a lesson (null if not scored yet).
+  manualScore(id: string): Promise<ManualScore | null> {
+    return request<ManualScore | null>(`/admin/lessons/${id}/manual-score`);
+  },
+
+  saveManualScore(id: string, body: ManualScoreInput): Promise<ManualScore> {
+    return request<ManualScore>(`/admin/lessons/${id}/manual-score`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    });
+  },
+
+  // Per-lesson Excel (AI + the coach's manual scores + comparison). Uses the
+  // `token` query param so a plain <a> download works.
+  lessonExportUrl(id: string): string {
+    const token = getToken() || "";
+    return `${API_BASE}${API_PREFIX}/admin/lessons/${id}/export${toQuery({ token })}`;
   },
 
   usage(country?: string): Promise<SchoolUsageRow[]> {
